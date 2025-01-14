@@ -1,0 +1,108 @@
+<html>
+<head>
+<script>
+const accepted = "abcdefghiklmnopqrstuvwqyz "
+const translation = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"," ", "th", "he", "in", "en", "nt", "re", "er", "an", "ti", "es", "on", "at", "se", "nd", "or", "ar", "al", "te", "co", "de", "to", "ra", "et", "ed", "it", "sa", "em", "ro", "the", "and", "tha", "ent", "ing", "ion", "tio"]//, "for", "nde"]
+const translation2 = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "`", "~", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "=", "{", "}", "[", "]", "\\", ";", ":", "'", "\"", ",", "<", ".", ">", "/", "?","\t","\n"]
+var compress = function() {
+	//var input = document.getElementById("input").value.toLowerCase().replace(/[^a-z ]/g, "");
+	var input = document.getElementById("input").value
+	var input1 = input.toLowerCase()
+	for (var i = 0; i < input1.length; i++) {
+		if(input1.charCodeAt(i) < "a".charCodeAt[0] || input1.charCodeAt(i) > "z".charCodeAt[0]) {
+			if(translation2.indexOf(input1[i]) < 0) {
+				input.replace(input[i], "?")
+			}
+		}
+	}
+	var result_int = []
+	var tristart = 55
+	var bistart = 27
+	for (var i = 0; i < input.length; i++) {
+		console.log("Position " + i + ": " + input[i])
+		var did_this_iteration = false
+		// Check trigrams
+		if(i + 2 < input.length) {
+			for (var j = tristart; j < translation.length - 2; j++) {
+				//console.log("	compare trigram " + translation[j])
+				var testvalue = input.substr(i,3)
+				if(testvalue == translation[j]) {
+					console.log("	Match trigram " + translation[j])
+					result_int.push(j)
+					i += 2
+					did_this_iteration = true
+					break
+				}
+			}
+		}
+		// Check bigrams
+		if(!did_this_iteration && i + 1 < input.length) {
+			for (var j = bistart; j < tristart; j++) {
+				//console.log("	compare bigram " + translation[j])
+				var testvalue = input.substr(i,2)
+				if(testvalue == translation[j]) {
+					console.log("	Match bigram " + translation[j])
+					result_int.push(j)
+					i += 1
+					did_this_iteration = true
+					break
+				}
+			}
+		}
+		// Otherwise just put the letter
+		if(!did_this_iteration) {
+			if(translation.indexOf(input[i]) >= 0) {
+				result_int.push(translation.indexOf(input[i]))
+			}
+			else if(translation.indexOf(input.toLowerCase()[i]) >= 0) {
+				result_int.push(62)
+				result_int.push(translation.indexOf(input.toLowerCase()[i]))
+			}
+			else if(translation2.indexOf(input[i]) >= 0){
+				result_int.push(63)
+				result_int.push(translation2.indexOf(input[i]))
+			}
+		}
+	}
+	var result = new Uint8Array(result_int)
+	// var result_b64 = btoa(String.fromCharCode.apply(null, result)
+	document.getElementById("output").innerHTML = JSON.stringify(result_int)
+	document.getElementById("diag").innerHTML = "Size reduced from " + input.length*8 + "bits to " + result_int.length*6 +" bits"
+
+}
+var decompress = function() {
+	console.log("Decompression begins")
+	var input_int = JSON.parse(document.getElementById("input1").value)
+	console.log(input_int)
+	var result = ""
+	for (var i = 0; i < input_int.length; i++) {
+		if(input_int[i] < 62) {
+			result += translation[input_int[i]]
+		}
+		else if(input_int[i] == 62) {
+			i++
+			result += translation[input_int[i]].toUpperCase()
+		}
+		else if(input_int[i] == 63) {
+			i++
+			result += translation2[input_int[i]]
+		}
+	}
+	document.getElementById("output1").innerHTML = result
+}
+</script>
+<title>Compression Test</title>
+</head>
+<body>
+	<textarea id="input"></textarea><button onclick="compress()">Compress</button>
+	<hr>
+	<div id="diag"></div>
+	<hr>
+	<div id="output">
+	</div>
+	<hr>
+	<input type="textarea" id="input1"></input><button onclick="decompress()">Decompress</button>
+	<div id="output1">
+	</div>
+</body>
+</html>
